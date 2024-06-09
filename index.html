@@ -189,6 +189,9 @@
         .addEventListener("submit", function (e) {
           e.preventDefault();
           const date = document.getElementById("date").value;
+          const startTime = document.getElementById("startTime").value;
+          const endTime = document.getElementById("endTime").value;
+          const breaks = parseInt(document.getElementById("breaks").value) || 0;
           const isSickDay = document.getElementById("sickDay").checked;
           const isFestDay = document.getElementById("festDay").checked;
 
@@ -205,11 +208,6 @@
           } else if (isFestDay) {
             hoursWorked = 8.5;
           } else {
-            const startTime = document.getElementById("startTime").value;
-            const endTime = document.getElementById("endTime").value;
-            const breaks =
-              parseInt(document.getElementById("breaks").value) || 0;
-
             const start = new Date(`1970-01-01T${startTime}:00`);
             const end = new Date(`1970-01-01T${endTime}:00`);
             hoursWorked = (end - start) / (1000 * 60 * 60) - breaks / 60;
@@ -219,6 +217,9 @@
 
           logEntries.push({
             date,
+            startTime,
+            endTime,
+            breaks,
             hoursWorked,
             isSickDay,
             isFestDay,
@@ -227,11 +228,16 @@
           const logItem = document.createElement("div");
           logItem.className = "log-item";
           logItem.innerHTML = `<strong>Date:</strong> ${date} <br>
-                           <strong>Hours Worked:</strong> ${hoursWorked.toFixed(
-                             2
-                           )} <br>
-                           <strong>Sick Day:</strong> ${isSickDay} <br>
-                           <strong>Fest Day:</strong> ${isFestDay}`;
+                             <strong>Start Time:</strong> ${
+                               startTime || "N/A"
+                             } <br>
+                             <strong>End Time:</strong> ${endTime || "N/A"} <br>
+                             <strong>Breaks:</strong> ${breaks} minutes <br>
+                             <strong>Hours Worked:</strong> ${hoursWorked.toFixed(
+                               2
+                             )} <br>
+                             <strong>Sick Day:</strong> ${isSickDay} <br>
+                             <strong>Fest Day:</strong> ${isFestDay}`;
           document.getElementById("log").appendChild(logItem);
 
           document.getElementById(
@@ -239,16 +245,59 @@
           ).innerText = `Total Hours Worked: ${totalHoursLogged.toFixed(2)}`;
 
           document.getElementById("workLogForm").reset();
+          enableInputs(); // Enable inputs when form is reset
         });
 
       document
         .getElementById("downloadExcel")
         .addEventListener("click", function () {
+          const headers = [
+            "Date",
+            "Start Time",
+            "End Time",
+            "Breaks (minutes)",
+            "Hours Worked",
+            "Sick Day",
+            "Fest Day",
+          ];
+          const data = logEntries.map((entry) => [
+            entry.date,
+            entry.startTime || "",
+            entry.endTime || "",
+            entry.breaks,
+            entry.hoursWorked,
+            entry.isSickDay,
+            entry.isFestDay,
+          ]);
+
+          // Add headers to data
+          data.unshift(headers);
+
+          // Add total hours row
+          data.push([
+            "Total Hours",
+            "",
+            "",
+            "",
+            totalHoursLogged.toFixed(2),
+            "",
+            "",
+          ]);
+
           const wb = XLSX.utils.book_new();
-          const ws = XLSX.utils.json_to_sheet(logEntries);
+          const ws = XLSX.utils.aoa_to_sheet(data);
+
           XLSX.utils.book_append_sheet(wb, ws, "Work Log");
           XLSX.writeFile(wb, "work_log.xlsx");
         });
+
+      function enableInputs() {
+        document.getElementById("startTime").disabled = false;
+        document.getElementById("endTime").disabled = false;
+        document.getElementById("breaks").disabled = false;
+        document.getElementById("sickDay").checked = false;
+        document.getElementById("festDay").checked = false;
+      }
 
       // Disable/Enable time inputs based on checkbox selection
       document
@@ -260,9 +309,7 @@
             document.getElementById("breaks").disabled = true;
             document.getElementById("festDay").checked = false;
           } else {
-            document.getElementById("startTime").disabled = false;
-            document.getElementById("endTime").disabled = false;
-            document.getElementById("breaks").disabled = false;
+            enableInputs();
           }
         });
 
@@ -275,9 +322,7 @@
             document.getElementById("breaks").disabled = true;
             document.getElementById("sickDay").checked = false;
           } else {
-            document.getElementById("startTime").disabled = false;
-            document.getElementById("endTime").disabled = false;
-            document.getElementById("breaks").disabled = false;
+            enableInputs();
           }
         });
     </script>
