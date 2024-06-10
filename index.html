@@ -77,6 +77,13 @@
       .toggle-link:hover {
         text-decoration: underline;
       }
+      #resetLog {
+        margin-top: 20px;
+        background-color: #dc3545;
+      }
+      #resetLog:hover {
+        background-color: #c82333;
+      }
     </style>
   </head>
   <body>
@@ -141,12 +148,31 @@
       <button id="downloadExcel" style="display: none">
         Download as Excel
       </button>
+      <button id="resetLog" style="display: none">Reset Log</button>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.16.9/xlsx.full.min.js"></script>
     <script>
       let totalHoursLogged = 0;
-      const logEntries = [];
+      let logEntries = [];
+
+      // Load logs from localStorage
+      window.onload = function () {
+        const savedLogs = JSON.parse(localStorage.getItem("workLogs")) || [];
+        logEntries = savedLogs;
+        totalHoursLogged = logEntries.reduce(
+          (sum, entry) => sum + entry.hoursWorked,
+          0
+        );
+        logEntries.forEach((entry) => displayLogItem(entry));
+        document.getElementById(
+          "totalHours"
+        ).innerText = `Total Hours Worked: ${totalHoursLogged.toFixed(2)}`;
+        document.getElementById("log").style.display = "block";
+        document.getElementById("totalHours").style.display = "block";
+        document.getElementById("downloadExcel").style.display = "block";
+        document.getElementById("resetLog").style.display = "block";
+      };
 
       // Toggle between login and registration forms
       document
@@ -170,9 +196,6 @@
           // Perform login logic here (e.g., check credentials)
           document.getElementById("loginForm").style.display = "none";
           document.getElementById("workLogForm").style.display = "block";
-          document.getElementById("log").style.display = "block";
-          document.getElementById("totalHours").style.display = "block";
-          document.getElementById("downloadExcel").style.display = "block";
         });
 
       document
@@ -215,7 +238,7 @@
 
           totalHoursLogged += hoursWorked;
 
-          logEntries.push({
+          const logEntry = {
             date,
             startTime,
             endTime,
@@ -223,27 +246,16 @@
             hoursWorked,
             isSickDay,
             isFestDay,
-          });
+          };
 
-          const logItem = document.createElement("div");
-          logItem.className = "log-item";
-          logItem.innerHTML = `<strong>Date:</strong> ${date} <br>
-                             <strong>Start Time:</strong> ${
-                               startTime || "N/A"
-                             } <br>
-                             <strong>End Time:</strong> ${endTime || "N/A"} <br>
-                             <strong>Breaks:</strong> ${breaks} minutes <br>
-                             <strong>Hours Worked:</strong> ${hoursWorked.toFixed(
-                               2
-                             )} <br>
-                             <strong>Sick Day:</strong> ${isSickDay} <br>
-                             <strong>Fest Day:</strong> ${isFestDay}`;
-          document.getElementById("log").appendChild(logItem);
+          logEntries.push(logEntry);
+          localStorage.setItem("workLogs", JSON.stringify(logEntries));
+
+          displayLogItem(logEntry);
 
           document.getElementById(
             "totalHours"
           ).innerText = `Total Hours Worked: ${totalHoursLogged.toFixed(2)}`;
-
           document.getElementById("workLogForm").reset();
           enableInputs(); // Enable inputs when form is reset
         });
@@ -290,6 +302,44 @@
           XLSX.utils.book_append_sheet(wb, ws, "Work Log");
           XLSX.writeFile(wb, "work_log.xlsx");
         });
+
+      document
+        .getElementById("resetLog")
+        .addEventListener("click", function () {
+          if (
+            confirm(
+              "Are you sure you want to reset the log? This action cannot be undone."
+            )
+          ) {
+            logEntries = [];
+            totalHoursLogged = 0;
+            localStorage.removeItem("workLogs");
+            document.getElementById("log").innerHTML = "<h2>Log</h2>";
+            document.getElementById("totalHours").innerText =
+              "Total Hours Worked: 0.00";
+          }
+        });
+
+      function displayLogItem(entry) {
+        const logItem = document.createElement("div");
+        logItem.className = "log-item";
+        logItem.innerHTML = `<strong>Date:</strong> ${entry.date} <br>
+                             <strong>Start Time:</strong> ${
+                               entry.startTime || "N/A"
+                             } <br>
+                             <strong>End Time:</strong> ${
+                               entry.endTime || "N/A"
+                             } <br>
+                             <strong>Breaks:</strong> ${
+                               entry.breaks
+                             } minutes <br>
+                             <strong>Hours Worked:</strong> ${entry.hoursWorked.toFixed(
+                               2
+                             )} <br>
+                             <strong>Sick Day:</strong> ${entry.isSickDay} <br>
+                             <strong>Fest Day:</strong> ${entry.isFestDay}`;
+        document.getElementById("log").appendChild(logItem);
+      }
 
       function enableInputs() {
         document.getElementById("startTime").disabled = false;
