@@ -85,6 +85,13 @@
       #resetLog:hover {
         background-color: #c82333;
       }
+      #logout {
+        margin-top: 20px;
+        background-color: #ffc107;
+      }
+      #logout:hover {
+        background-color: #e0a800;
+      }
     </style>
   </head>
   <body>
@@ -155,6 +162,7 @@
         Download as Excel
       </button>
       <button id="resetLog" style="display: none">Reset Log</button>
+      <button id="logout" style="display: none">Logout</button>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.16.9/xlsx.full.min.js"></script>
@@ -170,6 +178,7 @@
           loadLogs();
           document.getElementById("loginForm").style.display = "none";
           document.getElementById("workLogForm").style.display = "block";
+          document.getElementById("logout").style.display = "block";
         }
       };
 
@@ -219,6 +228,7 @@
           loadLogs();
           document.getElementById("loginForm").style.display = "none";
           document.getElementById("workLogForm").style.display = "block";
+          document.getElementById("logout").style.display = "block";
         });
 
       document
@@ -350,6 +360,17 @@
               "Total Hours Worked: 0.00";
           }
         });
+
+      document.getElementById("logout").addEventListener("click", function () {
+        localStorage.removeItem("currentUser");
+        document.getElementById("loginForm").style.display = "block";
+        document.getElementById("workLogForm").style.display = "none";
+        document.getElementById("logout").style.display = "none";
+        document.getElementById("log").style.display = "none";
+        document.getElementById("totalHours").style.display = "none";
+        document.getElementById("downloadExcel").style.display = "none";
+        document.getElementById("resetLog").style.display = "none";
+      });
 
       function displayLogItem(entry) {
         const logItem = document.createElement("div");
