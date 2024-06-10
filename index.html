@@ -383,12 +383,16 @@
           const username = document.getElementById("username").value;
           const password = document.getElementById("password").value;
           // Perform login logic here (e.g., check credentials)
-          currentUser = username;
-          localStorage.setItem("currentUser", currentUser);
-          loadLogs();
-          document.getElementById("loginForm").style.display = "none";
-          document.getElementById("workLogForm").style.display = "block";
-          document.getElementById("logout").style.display = "block";
+          if (localStorage.getItem(`user_${username}`) === password) {
+            currentUser = username;
+            localStorage.setItem("currentUser", currentUser);
+            loadLogs();
+            document.getElementById("loginForm").style.display = "none";
+            document.getElementById("workLogForm").style.display = "block";
+            document.getElementById("logout").style.display = "block";
+          } else {
+            alert("Invalid username or password");
+          }
         });
 
       document
