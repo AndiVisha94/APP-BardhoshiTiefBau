@@ -18,6 +18,7 @@
         padding: 20px;
         border-radius: 8px;
         box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        text-align: center;
       }
       h1 {
         text-align: center;
@@ -88,6 +89,11 @@
   </head>
   <body>
     <div class="container">
+      <img
+        src="logo.png"
+        alt="Logo"
+        style="max-width: 100px; margin-bottom: 20px"
+      />
       <h1>Work Log</h1>
 
       <form id="loginForm">
@@ -153,17 +159,29 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.16.9/xlsx.full.min.js"></script>
     <script>
+      let currentUser = "";
       let totalHoursLogged = 0;
       let logEntries = [];
 
       // Load logs from localStorage
       window.onload = function () {
-        const savedLogs = JSON.parse(localStorage.getItem("workLogs")) || [];
+        if (localStorage.getItem("currentUser")) {
+          currentUser = localStorage.getItem("currentUser");
+          loadLogs();
+          document.getElementById("loginForm").style.display = "none";
+          document.getElementById("workLogForm").style.display = "block";
+        }
+      };
+
+      function loadLogs() {
+        const savedLogs =
+          JSON.parse(localStorage.getItem(`workLogs_${currentUser}`)) || [];
         logEntries = savedLogs;
         totalHoursLogged = logEntries.reduce(
           (sum, entry) => sum + entry.hoursWorked,
           0
         );
+        document.getElementById("log").innerHTML = "<h2>Log</h2>"; // Clear existing log entries
         logEntries.forEach((entry) => displayLogItem(entry));
         document.getElementById(
           "totalHours"
@@ -172,7 +190,7 @@
         document.getElementById("totalHours").style.display = "block";
         document.getElementById("downloadExcel").style.display = "block";
         document.getElementById("resetLog").style.display = "block";
-      };
+      }
 
       // Toggle between login and registration forms
       document
@@ -193,7 +211,12 @@
         .getElementById("loginForm")
         .addEventListener("submit", function (e) {
           e.preventDefault();
+          const username = document.getElementById("username").value;
+          const password = document.getElementById("password").value;
           // Perform login logic here (e.g., check credentials)
+          currentUser = username;
+          localStorage.setItem("currentUser", currentUser);
+          loadLogs();
           document.getElementById("loginForm").style.display = "none";
           document.getElementById("workLogForm").style.display = "block";
         });
@@ -202,7 +225,12 @@
         .getElementById("registerForm")
         .addEventListener("submit", function (e) {
           e.preventDefault();
+          const username = document.getElementById("newUsername").value;
+          const password = document.getElementById("newPassword").value;
           // Perform registration logic here (e.g., save new user)
+          // Save credentials to localStorage for demo purposes (in real applications, use a secure method)
+          localStorage.setItem(`user_${username}`, password);
+          alert("Registration successful!");
           document.getElementById("registerForm").style.display = "none";
           document.getElementById("loginForm").style.display = "block";
         });
@@ -249,7 +277,10 @@
           };
 
           logEntries.push(logEntry);
-          localStorage.setItem("workLogs", JSON.stringify(logEntries));
+          localStorage.setItem(
+            `workLogs_${currentUser}`,
+            JSON.stringify(logEntries)
+          );
 
           displayLogItem(logEntry);
 
@@ -313,7 +344,7 @@
           ) {
             logEntries = [];
             totalHoursLogged = 0;
-            localStorage.removeItem("workLogs");
+            localStorage.removeItem(`workLogs_${currentUser}`);
             document.getElementById("log").innerHTML = "<h2>Log</h2>";
             document.getElementById("totalHours").innerText =
               "Total Hours Worked: 0.00";
