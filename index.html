@@ -6,45 +6,49 @@
     <title>Work Log</title>
     <style>
       body {
-        font-family: Arial, sans-serif;
-        background-color: #f0f0f0;
+        font-family: "Roboto", sans-serif;
+        background-color: #f0f2f5;
         margin: 0;
-        padding: 20px;
+        padding: 0;
       }
       .container {
-        max-width: 600px;
-        margin: auto;
-        background: white;
+        max-width: 800px;
+        margin: 50px auto;
+        background: #ffffff;
         padding: 20px;
-        border-radius: 8px;
-        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         text-align: center;
       }
       h1 {
-        text-align: center;
+        color: #333;
       }
       label {
         display: block;
         margin-top: 10px;
+        color: #666;
       }
       input,
+      select,
       textarea {
-        width: 100%;
+        width: calc(100% - 22px);
         padding: 10px;
         margin-top: 5px;
         border: 1px solid #ccc;
-        border-radius: 4px;
+        border-radius: 5px;
+        box-sizing: border-box;
       }
       button {
         display: block;
-        width: 100%;
+        width: calc(100% - 22px);
         padding: 10px;
         background-color: #28a745;
         color: white;
         border: none;
-        border-radius: 4px;
+        border-radius: 5px;
         margin-top: 20px;
         cursor: pointer;
+        transition: background-color 0.3s;
       }
       button:hover {
         background-color: #218838;
@@ -53,17 +57,18 @@
         margin-top: 20px;
       }
       .log-item {
-        background: #e9ecef;
+        background: #f9f9f9;
         padding: 10px;
-        border-radius: 4px;
+        border-radius: 5px;
         margin-top: 10px;
+        border: 1px solid #ddd;
       }
       #totalHours {
         margin-top: 20px;
         font-weight: bold;
+        color: #333;
       }
       #downloadExcel {
-        margin-top: 20px;
         background-color: #007bff;
       }
       #downloadExcel:hover {
@@ -92,6 +97,18 @@
       #logout:hover {
         background-color: #e0a800;
       }
+      .checkbox-container {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 10px;
+      }
+      .checkbox-label {
+        display: flex;
+        align-items: center;
+      }
+      .checkbox-label input {
+        margin-right: 10px;
+      }
     </style>
   </head>
   <body>
@@ -101,60 +118,71 @@
         alt="Logo"
         style="max-width: 100px; margin-bottom: 20px"
       />
-      <h1>Work Log</h1>
+      <h1 id="title">Work Log</h1>
+
+      <label for="languageSelect">Language:</label>
+      <select id="languageSelect">
+        <option value="en">English</option>
+        <option value="de">German</option>
+        <option value="sq">Albanian</option>
+      </select>
 
       <form id="loginForm">
-        <label for="username">Username:</label>
+        <label for="username" id="usernameLabel">Username:</label>
         <input type="text" id="username" name="username" required />
 
-        <label for="password">Password:</label>
+        <label for="password" id="passwordLabel">Password:</label>
         <input type="password" id="password" name="password" required />
 
-        <button type="submit">Login</button>
+        <button type="submit" id="loginButton">Login</button>
         <div class="toggle-link" id="showRegisterForm">
           Don't have an account? Register here
         </div>
       </form>
 
       <form id="registerForm" style="display: none">
-        <label for="newUsername">Username:</label>
+        <label for="newUsername" id="newUsernameLabel">Username:</label>
         <input type="text" id="newUsername" name="username" required />
 
-        <label for="newPassword">Password:</label>
+        <label for="newPassword" id="newPasswordLabel">Password:</label>
         <input type="password" id="newPassword" name="password" required />
 
-        <button type="submit">Register</button>
+        <button type="submit" id="registerButton">Register</button>
         <div class="toggle-link" id="showLoginForm">
           Already have an account? Login here
         </div>
       </form>
 
       <form id="workLogForm" style="display: none">
-        <label for="date">Date:</label>
+        <label for="date" id="dateLabel">Date:</label>
         <input type="date" id="date" required />
 
-        <label for="startTime">Start Time:</label>
+        <label for="startTime" id="startTimeLabel">Start Time:</label>
         <input type="time" id="startTime" />
 
-        <label for="endTime">End Time:</label>
+        <label for="endTime" id="endTimeLabel">End Time:</label>
         <input type="time" id="endTime" />
 
-        <label for="breaks">Breaks (in minutes):</label>
+        <label for="breaks" id="breaksLabel">Breaks (in minutes):</label>
         <input type="number" id="breaks" min="0" />
 
-        <label for="sickDay">
-          <input type="checkbox" id="sickDay" /> Sick Day
-        </label>
+        <div class="checkbox-container">
+          <label for="sickDay" class="checkbox-label">
+            <input type="checkbox" id="sickDay" />
+            <span id="sickDayLabel">Sick Day</span>
+          </label>
 
-        <label for="festDay">
-          <input type="checkbox" id="festDay" /> Fest Day
-        </label>
+          <label for="festDay" class="checkbox-label">
+            <input type="checkbox" id="festDay" />
+            <span id="festDayLabel">Fest Day</span>
+          </label>
+        </div>
 
-        <button type="submit">Submit</button>
+        <button type="submit" id="submitButton">Submit</button>
       </form>
 
       <div class="log" id="log" style="display: none">
-        <h2>Log</h2>
+        <h2 id="logTitle">Log</h2>
       </div>
 
       <div id="totalHours" style="display: none"></div>
@@ -171,8 +199,135 @@
       let totalHoursLogged = 0;
       let logEntries = [];
 
-      // Load logs from localStorage
+      const translations = {
+        en: {
+          title: "Work Log",
+          usernameLabel: "Username:",
+          passwordLabel: "Password:",
+          loginButton: "Login",
+          showRegisterForm: "Don't have an account? Register here",
+          newUsernameLabel: "Username:",
+          newPasswordLabel: "Password:",
+          registerButton: "Register",
+          showLoginForm: "Already have an account? Login here",
+          dateLabel: "Date:",
+          startTimeLabel: "Start Time:",
+          endTimeLabel: "End Time:",
+          breaksLabel: "Breaks (in minutes):",
+          sickDayLabel: "Sick Day",
+          festDayLabel: "Fest Day",
+          submitButton: "Submit",
+          logTitle: "Log",
+          totalHours: "Total Hours Worked:",
+          downloadExcel: "Download as Excel",
+          resetLog: "Reset Log",
+          logout: "Logout",
+        },
+        de: {
+          title: "Arbeitsprotokoll",
+          usernameLabel: "Benutzername:",
+          passwordLabel: "Passwort:",
+          loginButton: "Anmelden",
+          showRegisterForm: "Kein Konto? Hier registrieren",
+          newUsernameLabel: "Benutzername:",
+          newPasswordLabel: "Passwort:",
+          registerButton: "Registrieren",
+          showLoginForm: "Bereits ein Konto? Hier anmelden",
+          dateLabel: "Datum:",
+          startTimeLabel: "Startzeit:",
+          endTimeLabel: "Endzeit:",
+          breaksLabel: "Pausen (in Minuten):",
+          sickDayLabel: "Krankentag",
+          festDayLabel: "Festtag",
+          submitButton: "Einreichen",
+          logTitle: "Protokoll",
+          totalHours: "Gesamtarbeitsstunden:",
+          downloadExcel: "Als Excel herunterladen",
+          resetLog: "Protokoll zurücksetzen",
+          logout: "Abmelden",
+        },
+        sq: {
+          title: "Regjistri i Punës",
+          usernameLabel: "Emri i përdoruesit:",
+          passwordLabel: "Fjalëkalimi:",
+          loginButton: "Hyr",
+          showRegisterForm: "Nuk keni llogari? Regjistrohuni këtu",
+          newUsernameLabel: "Emri i përdoruesit:",
+          newPasswordLabel: "Fjalëkalimi:",
+          registerButton: "Regjistrohu",
+          showLoginForm: "Keni tashmë një llogari? Hyni këtu",
+          dateLabel: "Data:",
+          startTimeLabel: "Ora e Fillimit:",
+          endTimeLabel: "Ora e Mbarimit:",
+          breaksLabel: "Pushime (në minuta):",
+          sickDayLabel: "Ditë e sëmurë",
+          festDayLabel: "Ditë feste",
+          submitButton: "Paraqit",
+          logTitle: "Regjistri",
+          totalHours: "Orët totale të punës:",
+          downloadExcel: "Shkarko si Excel",
+          resetLog: "Rivendos regjistrin",
+          logout: "Dil",
+        },
+      };
+
+      function setLanguage(lang) {
+        document.getElementById("title").innerText = translations[lang].title;
+        document.getElementById("usernameLabel").innerText =
+          translations[lang].usernameLabel;
+        document.getElementById("passwordLabel").innerText =
+          translations[lang].passwordLabel;
+        document.getElementById("loginButton").innerText =
+          translations[lang].loginButton;
+        document.getElementById("showRegisterForm").innerText =
+          translations[lang].showRegisterForm;
+        document.getElementById("newUsernameLabel").innerText =
+          translations[lang].newUsernameLabel;
+        document.getElementById("newPasswordLabel").innerText =
+          translations[lang].newPasswordLabel;
+        document.getElementById("registerButton").innerText =
+          translations[lang].registerButton;
+        document.getElementById("showLoginForm").innerText =
+          translations[lang].showLoginForm;
+        document.getElementById("dateLabel").innerText =
+          translations[lang].dateLabel;
+        document.getElementById("startTimeLabel").innerText =
+          translations[lang].startTimeLabel;
+        document.getElementById("endTimeLabel").innerText =
+          translations[lang].endTimeLabel;
+        document.getElementById("breaksLabel").innerText =
+          translations[lang].breaksLabel;
+        document.getElementById("sickDayLabel").innerText =
+          translations[lang].sickDayLabel;
+        document.getElementById("festDayLabel").innerText =
+          translations[lang].festDayLabel;
+        document.getElementById("submitButton").innerText =
+          translations[lang].submitButton;
+        document.getElementById("logTitle").innerText =
+          translations[lang].logTitle;
+        document.getElementById("totalHours").innerText = `${
+          translations[lang].totalHours
+        } ${totalHoursLogged.toFixed(2)}`;
+        document.getElementById("downloadExcel").innerText =
+          translations[lang].downloadExcel;
+        document.getElementById("resetLog").innerText =
+          translations[lang].resetLog;
+        document.getElementById("logout").innerText = translations[lang].logout;
+      }
+
+      document
+        .getElementById("languageSelect")
+        .addEventListener("change", function () {
+          const selectedLanguage = this.value;
+          setLanguage(selectedLanguage);
+          localStorage.setItem("selectedLanguage", selectedLanguage);
+        });
+
       window.onload = function () {
+        const savedLanguage = localStorage.getItem("selectedLanguage") || "en";
+        document.getElementById("languageSelect").value = savedLanguage;
+        setLanguage(savedLanguage);
+
         if (localStorage.getItem("currentUser")) {
           currentUser = localStorage.getItem("currentUser");
           loadLogs();
@@ -190,11 +345,16 @@
           (sum, entry) => sum + entry.hoursWorked,
           0
         );
-        document.getElementById("log").innerHTML = "<h2>Log</h2>"; // Clear existing log entries
+        document.getElementById("log").innerHTML =
+          "<h2 id='logTitle'>" +
+          translations[document.getElementById("languageSelect").value]
+            .logTitle +
+          "</h2>"; // Clear existing log entries
         logEntries.forEach((entry) => displayLogItem(entry));
-        document.getElementById(
-          "totalHours"
-        ).innerText = `Total Hours Worked: ${totalHoursLogged.toFixed(2)}`;
+        document.getElementById("totalHours").innerText = `${
+          translations[document.getElementById("languageSelect").value]
+            .totalHours
+        } ${totalHoursLogged.toFixed(2)}`;
         document.getElementById("log").style.display = "block";
         document.getElementById("totalHours").style.display = "block";
         document.getElementById("downloadExcel").style.display = "block";
@@ -294,9 +454,10 @@
 
           displayLogItem(logEntry);
 
-          document.getElementById(
-            "totalHours"
-          ).innerText = `Total Hours Worked: ${totalHoursLogged.toFixed(2)}`;
+          document.getElementById("totalHours").innerText = `${
+            translations[document.getElementById("languageSelect").value]
+              .totalHours
+          } ${totalHoursLogged.toFixed(2)}`;
           document.getElementById("workLogForm").reset();
           enableInputs(); // Enable inputs when form is reset
         });
@@ -355,9 +516,14 @@
             logEntries = [];
             totalHoursLogged = 0;
             localStorage.removeItem(`workLogs_${currentUser}`);
-            document.getElementById("log").innerHTML = "<h2>Log</h2>";
+            document.getElementById("log").innerHTML =
+              "<h2 id='logTitle'>" +
+              translations[document.getElementById("languageSelect").value]
+                .logTitle +
+              "</h2>";
             document.getElementById("totalHours").innerText =
-              "Total Hours Worked: 0.00";
+              translations[document.getElementById("languageSelect").value]
+                .totalHours + " 0.00";
           }
         });
 
